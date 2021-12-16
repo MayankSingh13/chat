@@ -1,0 +1,169 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Sambhash</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="{% static 'sambhash/style.css' %}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  </head>
+  <body>
+    {% block body %}
+    {{ room_name|json_script:"room-name" }}
+    {{ request.user.first_name|json_script:"user_name" }}
+
+    {% if user.is_authenticated %}
+      <div class="chatheader">
+        <div class="row">
+          <div class="col">
+            <h2 style="text-align:left">SAMBHASH</h2>
+          </div>
+          <div class="col">
+            <h3 style="text-align:left">Chat Room: {{ room_name }}</h3>
+          </div>
+        </div>
+      </div>
+      <div class="container">
+        <div class="row justify-content-around">
+          <div class="col-2" style="padding:10px;">
+            <div class="userblock">
+              <p><strong>Online Users.</strong></p>
+              <ul id='members'>
+              </ul>
+            </div>
+          </div>
+
+          <script>
+            var socket = new WebSocket('ws://' + window.location.host + '/chatroom/public/');
+
+            const roomName = JSON.parse(document.getElementById('room-name').textContent);
+            console.log(roomName);
+            const userName = JSON.parse(document.getElementById('user_name').textContent);
+            console.log(userName);
+            socket.onopen = function open() {
+              console.log('WebSockets connection created.');
+              //socket.send(roomName);
+            };
+
+            if (socket.readyState == WebSocket.OPEN) {
+              socket.onopen();
+            }
+
+            // onmessage - An event listener to be called when a message is received from the server.
+            socket.onmessage = function(e) {
+                  // JSON.parse() converts the JSON object back into the original object,
+                  // then examine and act upon its contents.
+                const data = JSON.parse(e.data);
+                //console.log(data);
+                if (data.message === 'New user entered.'){
+                  //if block to add users getting connected or disconnected.
+                  const online_users = data.on_user;
+                  //console.log(online_users);
+                  var ul = document.getElementById('members');
+                  document.getElementById("members").innerHTML = "";
+                  for (var i=0; i < online_users.length; i++){
+                    var name = online_users[i];
+                    var li = document.createElement('li');
+                    li.appendChild(document.createTextNode(name));
+                    ul.appendChild(li);
+                  }
+                }
+                else {
+                  var p = document.createElement('p');
+                  var sup = document.createElement('sup');
+                  var para = document.createElement('div');
+                  var t = document.createTextNode(data.message);
+                  p.appendChild(t);
+                  var t = document.createTextNode('Sent by ' + data.user + ' on ' + data.time);
+                  sup.appendChild(t);
+                  sup.setAttribute('style', 'float:right; padding:2px; font-style:italic;');
+                  para.appendChild(p);
+                  para.appendChild(sup);
+                  //para.className = messanimate;
+                  console.log(userName);
+                  if (data.user === userName){
+                    para.setAttribute('style', 'border: 1px solid black; border-radius: 12px; background-color:#60d7f2; width:80%; float:left; margin-bottom:5px;');
+                  }
+                  else {
+                    para.setAttribute('style', 'border: 1px solid black; border-radius: 12px; background-color:#d5f260; width:80%; float:right; margin-bottom:5px;');
+                  }
+                  document.querySelector('#chat-log').append(para);
+                  p.scrollIntoView();//scroll to the bottom.
+                  document.querySelector('#chat-message-input').focus();
+                  document.querySelector('#chat-message-submit').disabled = true;
+                  document.querySelector('#chat-message-input').onkeyup = () => {
+                    if (document.querySelector('#chat-message-input').value.length > 0)
+                      document.querySelector('#chat-message-submit').disabled = false;
+                    else
+                    document.querySelector('#chat-message-submit').disabled = true;
+                  };
+                }
+              };
+            // onclose - An event listener to be called when the connection is closed.
+            socket.onclose = function() {
+                  console.error('Chat socket closed unexpectedly');
+              };
+
+          </script>
+
+          <div class="col-10" style="padding:10px;">
+            <div class="chatblock">
+              <!--textarea id="chat-log">
+
+              </textarea-->
+              <span id="chat-log"></span>
+            </div>
+            <div class="messageblock" style="padding:5px;">
+              <!--input id="chat-message-input" type="text" size="90"-->
+              <table>
+                <tr>
+                  <td><textarea id="chat-message-input" rows="1" cols="80"></textarea></td>
+                  <td></td>
+                  <td><input id="chat-message-submit" type="button" value="Send" class="btn btn-primary"></td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p><a href="{% url 'sambhash:chat' %}">Leave Room</a></p>
+    {% else %}
+      <p>Welcome, new user. Please log in.</p>
+    {% endif %}
+    {% endblock %}
+    {% block script %}
+      <script>
+        document.querySelector('#chat-message-input').focus();
+        document.querySelector('#chat-message-submit').disabled = true;
+        document.querySelector('#chat-message-input').onkeyup = function(e) {
+
+          if (document.querySelector('#chat-message-input').value.length > 0)
+            document.querySelector('#chat-message-submit').disabled = false;
+          else
+            document.querySelector('#chat-message-submit').disabled = true;
+
+            if (e.keyCode === 13) {  // enter, return
+                document.querySelector('#chat-message-submit').click();
+            }
+        };
+
+        document.querySelector('#chat-message-submit').onclick = function(e) {
+            const messageInputDom = document.querySelector('#chat-message-input');
+            const message = messageInputDom.value;
+            // Send the msg object as a JSON-formatted string.
+            socket.send(JSON.stringify({
+                'message': message,
+                'user': userName
+            }));
+            // Blank the text input element, ready to receive the next line of text from the user.
+            messageInputDom.value = '';
+        };
+      </script>
+    {% endblock script %}
+  </body>
+</html>

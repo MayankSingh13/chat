@@ -1,0 +1,47 @@
+{% extends "sambhash/base.html" %}
+
+{% block body %}
+
+{% if message %}
+<div class="alert alert-danger alert-dismissible" role="alert" style="text-align:center">
+  {{ message }}
+</div>
+{% endif %}
+
+<div class="login-form">
+  <form action="{% url 'sambhash:index' %}" method="post">
+  {% csrf_token %}
+      <h2 class="text-center"><strong>Login</strong></h2>
+      <div class="row justify-content-center">
+        <div class="col-4">
+          <div class="input-group mb-2">
+              <div class="input-group-prepend">
+                <div class="input-group-text"><i class="fas fa-user"></i></div>
+              </div>
+                <input type="text" class="form-control" name="username" placeholder="Username" required="required">
+          </div>
+        </div>
+      </div>
+      <div class="row justify-content-center">
+        <div class="col-4">
+          <div class="input-group mb-2">
+            <div class="input-group-prepend">
+              <div class="input-group-text"><i class="fas fa-lock"></i></div>
+            </div>
+            <input type="password" class="form-control" name="password" placeholder="Password" required="required">
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="row justify-content-center">
+          <div class="col-2">
+            <button type="submit" class="btn btn-primary btn-lg btn-block">Sign in</button>
+          </div>
+          <div class="col-2">
+            <button type="reset" class="btn btn-primary btn-lg btn-block">Reset</button>
+          </div>
+        </div>
+      </div>
+  </form>
+</div>
+{% endblock %}

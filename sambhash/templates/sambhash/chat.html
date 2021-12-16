@@ -1,0 +1,39 @@
+{% extends "sambhash/base.html" %}
+
+{% block body %}
+
+
+
+  {% if user.is_authenticated %}
+    <p>Welcome, {{ request.user.first_name }}.</p>
+    <p>Enter the room to start chatting.</p>
+        <div class="form-group">
+          <div class="row justify-content-center">
+            <table>
+              <tr>
+                <td><strong>Room Name:</strong></td>
+                <td><input type="text" name="room_name" size="10px" id="room-name-input" value="public" disabled></td>
+                <td><button type="submit" class="btn btn-primary btn-sm btn-block" id="room-name-submit">Enter</button></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        <script type="text/javascript">
+          document.querySelector('#room-name-input').focus();
+
+          document.querySelector('#room-name-submit').onclick = function(e) {
+                  var room_name = document.querySelector('#room-name-input').value;
+                  if (room_name.length == 0){
+                    alert("Please give a name for chatroom")
+                    return false;
+                  }
+                  console.log(room_name)
+                  window.location.pathname = '/chatroom/' + room_name + '/';
+              }
+        </script>
+
+    <p><a href="{% url 'sambhash:logout' %}">LogOut</a></p>
+  {% else %}
+    <p>Welcome, new user. Please log in.</p>
+  {% endif %}
+{% endblock %}
